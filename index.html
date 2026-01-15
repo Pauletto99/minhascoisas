@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Um Pedido Especial</title>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #C0392B;
+            /* Vermelho queimado */
+            --secondary-color: #E6B0AA;
+            /* Rosa queimado */
+            --bg-color: #FFF0F0;
+            --text-color: #5D4037;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Floating Hearts Background */
+        .heart-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .heart {
+            position: absolute;
+            top: -10%;
+            color: var(--secondary-color);
+            opacity: 0.6;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0) rotate(0deg);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translateY(110vh) translateX(20px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Introduction Section */
+        .intro {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .intro h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .intro p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            max-width: 600px;
+            margin-top: 1rem;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            animation: bounce 2s infinite;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Photo Gallery / Timeline */
+        .gallery {
+            padding: 4rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4rem;
+        }
+
+        .photo-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            opacity: 0;
+            /* Hidden initially */
+            transform: translateY(30px);
+            transition: opacity 1s ease-out, transform 1s ease-out;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .photo-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .photo-card.fade-out {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 300px;
+            background-color: #fce4ec;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            border: 2px dashed var(--secondary-color);
+            overflow: hidden;
+        }
+
+        .photo-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-caption {
+            margin-top: 1rem;
+            text-align: center;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+
+        /* Proposal Section */
+        .proposal {
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(230, 176, 170, 0.2) 100%);
+            position: relative;
+            /* Need relative for absolute positioning of NO button inside */
+            overflow: hidden;
+            /* Keep the running button inside */
+        }
+
+        .proposal h2 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 3rem;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            height: 100px;
+            /* Give space for the button to move if near */
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .btn-yes {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 15px rgba(192, 57, 43, 0.4);
+        }
+
+        .btn-yes:hover {
+            transform: scale(1.05);
+            background-color: #a93226;
+        }
+
+        .btn-no {
+            background-color: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            /* position: absolute; Removed so they sit side-by-side */
+        }
+
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            z-index: 100;
+            display: none;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 90%;
+        }
+
+        .message-box h3 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            display: none;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .intro h1 {
+                font-size: 3rem;
+            }
+
+            .proposal h2 {
+                font-size: 2.5rem;
+            }
+
+            .buttons {
+                flex-direction: row;
+            }
+
+            /* Keep row for easy escaping */
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Floating Hearts Container -->
+    <div class="heart-bg" id="heart-bg"></div>
+
+    <!-- Introduction -->
+    <section class="intro">
+        <h1>Vida, Leticia, Le, Leti ou Meu Amor</h1>
+        <p>Desde o dia em que te conheci, tudo mudou. Cada sorriso, cada momento, cada mania que pegamos um do outro com
+            a convivencia e parceria que fomos criando ao longo do tempo me fez ter a certeza de que...</p>
+        <div class="scroll-indicator">⬇</div>
+    </section>
+
+    <!-- Timeline Photo Gallery -->
+    <div class="gallery">
+        <div class="photo-card">
+            <div class="photo-placeholder">
+                <!-- User fills src later -->
+                <img src="C:\Users\PCGamer\Documents\heheeh\coisas\bobagens.jpeg" alt="Foto 1: Nosso primeiro encontro">
+            </div>
+            <p class="photo-caption">Como é bom te irritar e estar contigo...</p>
+        </div>
+
+        <div class="photo-card">
+            <div class="photo-placeholder">
+                <img src="C:\Users\PCGamer\Documents\heheeh\coisas\irritar2.jpeg" alt="Foto 2: Aquele dia especial">
+            </div>
+            <p class="photo-caption">e te irritar mesmo kkk (não tem mais devolução)</p>
+        </div>
+
+        <div class="photo-card">
+            <div class="photo-placeholder">
+                <img src="C:\Users\PCGamer\Documents\heheeh\coisas\gesto.jpeg" alt="Foto 3: Viagem juntos">
+            </div>
+            <p class="photo-caption">Mas tambem nunca me esquecer que amar você de toda forma possivel é a melhor coisa
+                que posso fazer</p>
+        </div>
+    </div>
+
+    <!-- The Proposal -->
+    <section class="proposal">
+        <h2>Quer namorar comigo?</h2>
+        <div class="buttons">
+            <button class="btn btn-yes" onclick="celebrate()">SIM</button>
+            <button class="btn btn-no" id="btn-no">NÃO</button>
+        </div>
+    </section>
+
+    <!-- Success Message -->
+    <div class="overlay" id="overlay"></div>
+    <div class="message-box" id="message-box">
+        <h3>Eu te amo! ❤️</h3>
+        <p>Mal posso esperar para construir nosso futuro juntos onde conseguimos e conquistamos tudo que queremos.</p>
+    </div>
+
+    <script>
+        // 1. Floating Hearts Animation Logic
+        function createHearts() {
+            const heartContainer = document.getElementById('heart-bg');
+            const hearts = ['❤️', '💖', '💕', '💗'];
+
+            setInterval(() => {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.innerText = hearts[Math.floor(Math.random() * hearts.length)];
+
+                // Randomize position and animation properties
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDuration = Math.random() * 3 + 3 + 's'; // 3-6s
+                heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+
+                heartContainer.appendChild(heart);
+
+                // Cleanup
+                setTimeout(() => {
+                    heart.remove();
+                }, 6000);
+            }, 300);
+        }
+
+        // 2. Scroll Fade-in/Fade-out Logic
+        function setupScrollAnimation() {
+            const observerOptions = {
+                threshold: 0.2, // Trigger when 20% visible
+                rootMargin: "0px 0px -100px 0px" // Trigger slightly before leaving viewport
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        entry.target.classList.remove('fade-out');
+                    } else {
+                        // Optional: Fade out when scrolling past (up or down)
+                        // Checking boundingClientRect logic for "scrolling past"
+                        if (entry.boundingClientRect.top < 0) {
+                            entry.target.classList.add('fade-out');
+                            entry.target.classList.remove('visible');
+                        } else if (entry.boundingClientRect.top > window.innerHeight) {
+                            entry.target.classList.remove('visible'); // Reset if scrolling back up
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.photo-card').forEach(card => {
+                observer.observe(card);
+            });
+        }
+
+        // 3. "No" Button Fleeing Logic
+        function setupRunawayButton() {
+            const btnNo = document.getElementById('btn-no');
+
+            // Initial positioning relative to container is tricky with absolute,
+            // so we set it properly on first interaction or just keep it in flow initially.
+            // But to move it freely, it helps if it starts absolute or becomes absolute.
+            // Let's keep it in flex flow initially, then switch to fixed/absolute on hover.
+
+            const moveButton = (e) => {
+                e.preventDefault(); // Prevent touch click
+
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                // Calculate random position
+                const newX = Math.random() * (width - 100); // maintain within view
+                const newY = Math.random() * (height - 50);
+
+                btnNo.style.position = 'fixed'; // Escape any container
+                btnNo.style.left = newX + 'px';
+                btnNo.style.top = newY + 'px';
+            };
+
+            btnNo.addEventListener('mouseover', moveButton);
+            btnNo.addEventListener('touchstart', moveButton);
+            btnNo.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Just in case they manage to click it
+                moveButton(e);
+            });
+        }
+
+        // 4. "Yes" Button Celebration
+        window.celebrate = function () {
+            // Confetti
+            var duration = 3000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#C0392B', '#E6B0AA', '#ffffff']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#C0392B', '#E6B0AA', '#ffffff']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+            // Show Message
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('message-box').style.display = 'block';
+
+            // Scroll to center message if needed, though it's fixed
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createHearts();
+            setupScrollAnimation();
+            setupRunawayButton();
+        });
+
+    </script>
+</body>
+
+</html>
